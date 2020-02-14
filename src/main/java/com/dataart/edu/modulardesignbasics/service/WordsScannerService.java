@@ -34,9 +34,6 @@ import java.util.stream.Stream;
 @Slf4j
 @Service
 public class WordsScannerService {
-
-    public static final String PUNCTUATION = "[.,\"':;!?(){}*&|@$~`=+<>/\\[\\]\\\\]";
-
     private final SourceRepository sourceRepository;
 
     private final ResultRepository resultRepository;
@@ -48,32 +45,37 @@ public class WordsScannerService {
         Source source1 = sources.get(0); // todo
         Path path = Path.of(source1.getPath());
 
+        Instant startTime = Instant.now();
         Set<Path> txtFiles = getDescendantTxtFiles(path);
+        Instant endTime = Instant.now();
+        log.info("Time elapsed descendant: {}", Duration.between(startTime, endTime).toMillis());
 
         log.info("Scanning ...");
-        Instant startTime = Instant.now();
+        startTime = Instant.now();
 
-//        List<Result> results = txtFiles.stream()
-//                .map(p -> Result.builder()
-//                        .sourceId(source1.getId())
-//                        .fileName(p.toString())
-//                        .words(getWords(p))
-//                        .build())
-//                .collect(Collectors.toList());
+        txtFiles.parallelStream()
+                .map(p -> Result.builder()
+                        .sourceId(source1.getId())
+                        .fileName(p.toString())
+                        .words(getWords(p))
+                        .build())
+                .forEach(p -> {
 
-        List<Callable<Result>> tasks = new ArrayList<>();
-        txtFiles.forEach(txt -> tasks.add(scanPath(source1, txt)));
+                });
 
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        List<Future<Result>> resultFutures = executorService.invokeAll(tasks);
+//        List<Callable<Result>> tasks = new ArrayList<>();
+//        txtFiles.forEach(txt -> tasks.add(scanPath(source1, txt)));
+//
+//        ExecutorService executorService = Executors.newCachedThreadPool();
+//        List<Future<Result>> resultFutures = executorService.invokeAll(tasks);
+//
+//        List<Result> results = new ArrayList<>();
+//        for (Future<Result> future: resultFutures) {
+//            results.add(future.get());
+//        }
 
-        List<Result> results = new ArrayList<>();
-        for (Future<Result> future: resultFutures) {
-            results.add(future.get());
-        }
-
-        Instant endTime = Instant.now();
-        log.info("Time elapsed: {}", Duration.between(startTime, endTime).toMillis());
+        endTime = Instant.now();
+        log.info("Time elapsed scan: {}", Duration.between(startTime, endTime).toMillis());
 
         resultRepository.deleteAll();
         resultRepository.insertAll(results);
@@ -110,10 +112,10 @@ public class WordsScannerService {
     }
 
     protected Function<String, String> getMapper() {
-        return s -> s.replaceAll(PUNCTUATION, "");
+        return Function.identity();
     }
 
     protected Predicate<String> getFilter() {
-        return s -> !s.isEmpty() && !s.equals("-") && !s.matches("\\d+");
+        return s -> s.matches("[а-яА-Яa-zA-Z]+");
     }
 }
