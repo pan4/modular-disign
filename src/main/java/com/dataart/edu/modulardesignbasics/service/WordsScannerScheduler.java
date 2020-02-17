@@ -16,7 +16,7 @@ public class WordsScannerScheduler {
     private final WordsScannerService wordsScannerService;
 
     @Scheduled(cron = CRON)
-    private void schedule() throws IOException, ExecutionException, InterruptedException {
+    private void schedule() throws IOException {
         wordsScannerService.scan();
     }
 }

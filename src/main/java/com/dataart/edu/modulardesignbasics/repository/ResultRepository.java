@@ -4,6 +4,7 @@ import com.dataart.edu.modulardesignbasics.model.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Array;
@@ -21,7 +22,7 @@ public class ResultRepository {
         jdbcTemplate.update("delete from result");
     }
 
-    public int[] insertAll(Collection<Result> results) {
+    public int[] saveAll(Collection<Result> results) {
         return this.jdbcTemplate.batchUpdate(
                 "insert into result (dir_id, file_name, words) values(?,?,?)",
                 new BatchPreparedStatementSetter() {
@@ -38,6 +39,20 @@ public class ResultRepository {
                         return results.size();
                     }
 
+                });
+    }
+
+    public void deleteBySourceIdAndFileName(Long sourceId, String fileName){
+        jdbcTemplate.update("delete from result where dir_id = ? and file_name = ?", sourceId, fileName);
+    }
+
+    public int save(Result result) {
+        return jdbcTemplate.update(
+                "insert into result (dir_id, file_name, words) values(?,?,?)",
+                ps -> {
+                    ps.setLong(1, result.getSourceId());
+                    ps.setString(2, result.getFileName());
+                    ps.setArray(3, toSqlArray(ps, result.getWords().toArray()));
                 });
     }
 

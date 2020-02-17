@@ -15,16 +15,10 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -39,7 +33,7 @@ public class WordsScannerService {
     private final ResultRepository resultRepository;
 
     @Transactional
-    public void scan() throws IOException, InterruptedException, ExecutionException {
+    public void scan() throws IOException {
         List<Source> sources = sourceRepository.findAll();
 
         Source source1 = sources.get(0); // todo
@@ -54,42 +48,24 @@ public class WordsScannerService {
         startTime = Instant.now();
 
         txtFiles.parallelStream()
-                .map(p -> Result.builder()
+                .map(file -> Result.builder()
                         .sourceId(source1.getId())
-                        .fileName(p.toString())
-                        .words(getWords(p))
+                        .fileName(file.toString())
+                        .words(getWords(file))
                         .build())
-                .forEach(p -> {
-
-                });
-
-//        List<Callable<Result>> tasks = new ArrayList<>();
-//        txtFiles.forEach(txt -> tasks.add(scanPath(source1, txt)));
-//
-//        ExecutorService executorService = Executors.newCachedThreadPool();
-//        List<Future<Result>> resultFutures = executorService.invokeAll(tasks);
-//
-//        List<Result> results = new ArrayList<>();
-//        for (Future<Result> future: resultFutures) {
-//            results.add(future.get());
-//        }
+                .forEach(this::updateResult);
 
         endTime = Instant.now();
         log.info("Time elapsed scan: {}", Duration.between(startTime, endTime).toMillis());
-
-        resultRepository.deleteAll();
-        resultRepository.insertAll(results);
 
         sources.forEach(source -> source.setLastScanned(LocalDateTime.now()));
         sourceRepository.updateAll(sources);
     }
 
-    Callable<Result> scanPath(Source source, Path path) {
-        return () -> Result.builder()
-                .sourceId(source.getId())
-                .fileName(path.toString())
-                .words(getWords(path))
-                .build();
+    @Transactional
+    protected void updateResult(Result result){
+        resultRepository.deleteBySourceIdAndFileName(result.getSourceId(), result.getFileName());
+        resultRepository.save(result);
     }
 
     private Set<Path> getDescendantTxtFiles(Path path) throws IOException {
