@@ -49,4 +49,11 @@ public class SourceRepository {
                     }
                 });
     }
+
+    public int update(Source source) {
+        return jdbcTemplate.update(
+                "update source set last_scanned = ? where id = ?",
+                source.getLastScanned(), source.getId()
+        );
+    }
 }

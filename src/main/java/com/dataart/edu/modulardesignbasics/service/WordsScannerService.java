@@ -4,16 +4,14 @@ import com.dataart.edu.modulardesignbasics.model.Result;
 import com.dataart.edu.modulardesignbasics.model.Source;
 import com.dataart.edu.modulardesignbasics.repository.ResultRepository;
 import com.dataart.edu.modulardesignbasics.repository.SourceRepository;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +22,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@AllArgsConstructor
 @Slf4j
 @Service
 public class WordsScannerService {
@@ -32,38 +29,43 @@ public class WordsScannerService {
 
     private final ResultRepository resultRepository;
 
-    @Transactional
+    private WordsScannerService self;
+
+    @Autowired
+    public void setWordsScannerService(WordsScannerService self){
+        this.self = self;
+    }
+
+    public WordsScannerService(SourceRepository sourceRepository, ResultRepository resultRepository) {
+        this.sourceRepository = sourceRepository;
+        this.resultRepository = resultRepository;
+    }
+
     public void scan() throws IOException {
         List<Source> sources = sourceRepository.findAll();
 
-        Source source1 = sources.get(0); // todo
-        Path path = Path.of(source1.getPath());
+        for(Source source : sources) {
+            Path path = Path.of(source.getPath());
 
-        Instant startTime = Instant.now();
-        Set<Path> txtFiles = getDescendantTxtFiles(path);
-        Instant endTime = Instant.now();
-        log.info("Time elapsed descendant: {}", Duration.between(startTime, endTime).toMillis());
+            Set<Path> txtFiles = getDescendantTxtFiles(path);
 
-        log.info("Scanning ...");
-        startTime = Instant.now();
+            txtFiles.parallelStream()
+                    .map(file -> Result.builder()
+                            .sourceId(source.getId())
+                            .fileName(file.toString())
+                            .words(getWords(file))
+                            .build())
+                    .forEach(self::updateResult);
 
-        txtFiles.parallelStream()
-                .map(file -> Result.builder()
-                        .sourceId(source1.getId())
-                        .fileName(file.toString())
-                        .words(getWords(file))
-                        .build())
-                .forEach(this::updateResult);
+            source.setLastScanned(LocalDateTime.now());
+            sourceRepository.update(source);
 
-        endTime = Instant.now();
-        log.info("Time elapsed scan: {}", Duration.between(startTime, endTime).toMillis());
-
-        sources.forEach(source -> source.setLastScanned(LocalDateTime.now()));
-        sourceRepository.updateAll(sources);
+            log.info("{} directory has been scanned", source.getPath());
+        }
     }
 
     @Transactional
-    protected void updateResult(Result result){
+    public void updateResult(Result result){
         resultRepository.deleteBySourceIdAndFileName(result.getSourceId(), result.getFileName());
         resultRepository.save(result);
     }
