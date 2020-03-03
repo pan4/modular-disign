@@ -4,6 +4,7 @@ import com.dataart.edu.modulardesignbasics.model.Result;
 import com.dataart.edu.modulardesignbasics.model.Source;
 import com.dataart.edu.modulardesignbasics.repository.ResultRepository;
 import com.dataart.edu.modulardesignbasics.repository.SourceRepository;
+import com.dataart.edu.modulardesignbasics.service.WordsCollector;
 import com.dataart.edu.modulardesignbasics.service.WordsScannerService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -13,22 +14,28 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-class WordsScannerApplicationTests {
+class WordsScannerServiceTests {
 
 	@InjectMocks
 	WordsScannerService wordsScannerService;
+
+	@Mock
+	WordsCollector wordsCollector;
 
 	@Mock
 	ResultRepository resultRepository;
@@ -45,8 +52,14 @@ class WordsScannerApplicationTests {
 		wordsScannerService.setWordsScannerService(wordsScannerService);
 
 		String sourcePath = new File("").getAbsolutePath() + "\\source_folder";
+
 		Source source = new Source(1L, sourcePath, LocalDateTime.now());
 		when(sourceRepository.findAll()).thenReturn(Collections.singletonList(source));
+
+		Set<String> expected = new HashSet<>();
+		expected.add("hello");
+		expected.add("world");
+		when(wordsCollector.collectWords(any())).thenReturn(expected);
 
 		wordsScannerService.scan();
 
@@ -65,7 +78,7 @@ class WordsScannerApplicationTests {
 		verify(resultRepository, times(4)).save(resultCaptor.capture());
 		List<Result> results = resultCaptor.getAllValues();
 
-		Set<String> words = results.stream()
+		Collection<String> words = results.stream()
 				.filter(result -> result.getFileName().endsWith("file.txt"))
 				.findFirst()
 				.get()

@@ -4,7 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Set;
+import java.util.Collection;
 
 @Getter
 @Setter
@@ -16,5 +16,5 @@ public class Result {
 
     private String fileName;
 
-    Set<String> words;
+    Collection<String> words;
 }
