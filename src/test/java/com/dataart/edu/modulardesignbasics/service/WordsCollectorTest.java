@@ -1,7 +1,6 @@
-package com.dataart.edu.modulardesignbasics;
+package com.dataart.edu.modulardesignbasics.service;
 
 
-import com.dataart.edu.modulardesignbasics.service.WordsCollector;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.springframework.boot.test.context.SpringBootTest;

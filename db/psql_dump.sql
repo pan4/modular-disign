@@ -9,3 +9,4 @@ CREATE TABLE RESULT (
            words varchar[] NOT NULL);
 CREATE UNIQUE INDEX idx_result_id ON result (id);
 CREATE UNIQUE INDEX idx_result_uq ON result (dir_id, file_name);
+
