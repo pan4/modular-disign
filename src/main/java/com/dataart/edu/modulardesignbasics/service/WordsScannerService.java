@@ -10,11 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -25,9 +23,9 @@ public class WordsScannerService {
 
     private final WordsCollector wordsCollector;
 
-    private WordsScannerService self;
+    private final FileSystemScanner fileSystemScanner;
 
-    private String filesToScanPattern = ".*\\.txt$";
+    private WordsScannerService self;
 
     @Autowired
     public void setWordsScannerService(WordsScannerService self){
@@ -35,10 +33,11 @@ public class WordsScannerService {
     }
 
     public WordsScannerService(SourceRepository sourceRepository, ResultRepository resultRepository,
-                               WordsCollector wordsCollector) {
+                               WordsCollector wordsCollector, FileSystemScanner fileSystemScanner) {
         this.sourceRepository = sourceRepository;
         this.resultRepository = resultRepository;
         this.wordsCollector = wordsCollector;
+        this.fileSystemScanner = fileSystemScanner;
     }
 
     public void scan() throws IOException {
@@ -47,15 +46,14 @@ public class WordsScannerService {
         for(Source source : sources) {
             Path path = Path.of(source.getPath());
 
-            try (Stream<Path> filesStream = getDescendantFilesStream(path)) {
-                filesStream.parallel()
-                        .map(file -> Result.builder()
-                                .sourceId(source.getId())
-                                .fileName(file.toString())
-                                .words(wordsCollector.collectWords(file))
-                                .build())
-                        .forEach(self::updateResult);
-            }
+            fileSystemScanner.scan(path, file -> {
+                Result result = Result.builder()
+                        .sourceId(source.getId())
+                        .fileName(file.toString())
+                        .words(wordsCollector.collectWords(file))
+                        .build();
+                self.updateResult(result);
+            });
 
             source.setLastScanned(LocalDateTime.now());
             sourceRepository.update(source);
@@ -68,14 +66,5 @@ public class WordsScannerService {
     public void updateResult(Result result){
         resultRepository.deleteBySourceIdAndFileName(result.getSourceId(), result.getFileName());
         resultRepository.save(result);
-    }
-
-    private Stream<Path> getDescendantFilesStream(Path path) throws IOException {
-        return Files.walk(path)
-                .filter(p -> p.toString().matches(filesToScanPattern));
-    }
-
-    public void setFilesToScanPattern(String filesToScanPattern) {
-        this.filesToScanPattern = filesToScanPattern;
     }
 }

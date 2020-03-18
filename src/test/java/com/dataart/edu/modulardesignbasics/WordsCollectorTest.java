@@ -22,7 +22,7 @@ public class WordsCollectorTest {
 
     @Test
     public void collectWordsTest(){
-        Path path = Path.of(new File("").getAbsolutePath() + "\\source_folder\\file.txt");
+        Path path = Path.of(new File("").getAbsolutePath() + "/source_folder/file.txt");
 
         Collection<String> actualSet = wordsCollector.collectWords(path);
 

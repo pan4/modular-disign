@@ -1,6 +1,6 @@
 package com.dataart.edu.modulardesignbasics.service;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-@Service
+@Component
 public class WordsCollector {
 
     public Collection<String> collectWords(Path path) {

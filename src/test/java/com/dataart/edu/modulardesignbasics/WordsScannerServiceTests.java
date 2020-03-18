@@ -51,7 +51,7 @@ class WordsScannerServiceTests {
 	public void scanTest() throws Exception {
 		wordsScannerService.setWordsScannerService(wordsScannerService);
 
-		String sourcePath = new File("").getAbsolutePath() + "\\source_folder";
+		String sourcePath = new File("").getAbsolutePath() + "/source_folder";
 
 		Source source = new Source(1L, sourcePath, LocalDateTime.now());
 		when(sourceRepository.findAll()).thenReturn(Collections.singletonList(source));
@@ -69,10 +69,10 @@ class WordsScannerServiceTests {
 
         idCaptor.getAllValues().forEach(id -> assertEquals(1L, id));
 		List<String> allValues = fileNameCaptor.getAllValues().stream().sorted().collect(Collectors.toList());
-		assertEquals(sourcePath + "\\file.txt", allValues.get(0));
-		assertEquals(sourcePath + "\\nested1\\file1.txt", allValues.get(1));
-		assertEquals(sourcePath + "\\nested1\\file2.txt", allValues.get(2));
-		assertEquals(sourcePath + "\\nested2\\file3.txt", allValues.get(3));
+		assertEquals(sourcePath + "/file.txt", allValues.get(0));
+		assertEquals(sourcePath + "/nested1/file1.txt", allValues.get(1));
+		assertEquals(sourcePath + "/nested1/file2.txt", allValues.get(2));
+		assertEquals(sourcePath + "/nested2/file3.txt", allValues.get(3));
 
 		ArgumentCaptor<Result> resultCaptor = ArgumentCaptor.forClass(Result.class);
 		verify(resultRepository, times(4)).save(resultCaptor.capture());
