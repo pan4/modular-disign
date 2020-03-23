@@ -28,7 +28,7 @@ public class WordsScannerApplication {
 	}
 
 	@Bean
-	public WordsCollector wordsCollectorPart2(){
+	public WordsCollector wordsCollectorStep2(){
 		return new WordsCollector(){
 			@Override
 			protected Predicate<String> getFilter() {

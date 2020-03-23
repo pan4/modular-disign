@@ -2,20 +2,18 @@ package com.dataart.edu.modulardesignbasics.service.strategy;
 
 import com.dataart.edu.modulardesignbasics.model.Result;
 import com.dataart.edu.modulardesignbasics.model.Source;
+import com.dataart.edu.modulardesignbasics.repository.FileRepository;
 import com.dataart.edu.modulardesignbasics.repository.ResultRepository;
 import com.dataart.edu.modulardesignbasics.service.WordsCollector;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -26,20 +24,16 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 @Primary
-@Profile("part2")
+@Profile("step2")
 @Component
 public class Step2SourceHandlingStrategy implements SourceHandlingStrategy {
     private final ResultRepository resultRepository;
 
-    private final WordsCollector wordsCollectorPart2;
+    private final WordsCollector wordsCollectorStep2;
+
+    private final FileRepository fileRepository;
 
     private Step2SourceHandlingStrategy self;
-
-    @Value("${result.txt.name}")
-    private String txtResultName;
-
-    @Value("${result.doc.name}")
-    private String docResultName;
 
     private Map<HashCode, Set<String>> equalDocFiles;
 
@@ -48,20 +42,17 @@ public class Step2SourceHandlingStrategy implements SourceHandlingStrategy {
         this.self = self;
     }
 
-    public Step2SourceHandlingStrategy(ResultRepository resultRepository, WordsCollector wordsCollectorPart2) {
+    public Step2SourceHandlingStrategy(ResultRepository resultRepository, WordsCollector wordsCollectorStep2,
+                                       FileRepository fileRepository) {
         this.resultRepository = resultRepository;
-        this.wordsCollectorPart2 = wordsCollectorPart2;
+        this.wordsCollectorStep2 = wordsCollectorStep2;
+        this.fileRepository = fileRepository;
     }
 
     @Override
     public void init() {
-        try {
-            FileWriter fileWriter = new FileWriter(txtResultName);
-            fileWriter.close();
-            equalDocFiles = new HashMap<>();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        equalDocFiles = new HashMap<>();
+        fileRepository.createTxtResultsFile();
     }
 
     @Override
@@ -75,23 +66,13 @@ public class Step2SourceHandlingStrategy implements SourceHandlingStrategy {
                     docConsumer().accept(path);
                 }
             });
-            saveToFile(source.getPath(), words);
+            fileRepository.saveTxtResults(source.getPath(), words);
         };
     }
 
     @Override
     public void flush() {
-        try {
-            PrintWriter printWriter = new PrintWriter(new FileWriter(docResultName));
-            for (Set<String> set : equalDocFiles.values()) {
-                if (set.size() > 1) {
-                    printWriter.println(set.toString());
-                }
-            }
-            printWriter.close();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        fileRepository.saveDocResults(equalDocFiles);
     }
 
     private Consumer<Path> txtConsumer(Source source, Set<String> words) {
@@ -99,7 +80,7 @@ public class Step2SourceHandlingStrategy implements SourceHandlingStrategy {
             Result result = Result.builder()
                     .sourceId(source.getId())
                     .fileName(path.toString())
-                    .words(wordsCollectorPart2.collectWords(path))
+                    .words(wordsCollectorStep2.collectWords(path))
                     .build();
             self.saveToDatabase(result);
             words.addAll(result.getWords());
@@ -122,16 +103,6 @@ public class Step2SourceHandlingStrategy implements SourceHandlingStrategy {
                 throw new UncheckedIOException(e);
             }
         };
-    }
-
-    private void saveToFile(String sourcePath, Set<String> words) {
-        try {
-            PrintWriter printWriter = new PrintWriter(new FileWriter(txtResultName, true));
-            printWriter.printf("%s: %s\n", sourcePath, words.toString());
-            printWriter.close();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
     }
 
     @Transactional

@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 public class Step1SourceHandlingStrategyTest {
 
     @InjectMocks
-	Step1SourceHandlingStrategy part1SourceHandlerFactory;
+	Step1SourceHandlingStrategy step1SourceHandlingStrategy;
 
     @Mock
     WordsCollector wordsCollector;
@@ -37,7 +37,7 @@ public class Step1SourceHandlingStrategyTest {
 
     @BeforeEach
 	public void setUp(){
-    	part1SourceHandlerFactory.setSelf(part1SourceHandlerFactory);
+    	step1SourceHandlingStrategy.setSelf(step1SourceHandlingStrategy);
 	}
 
     @Test
@@ -46,7 +46,7 @@ public class Step1SourceHandlingStrategyTest {
 		Path path = Path.of("some/path/url");
 		Source source = new Source(sourceId, path.toString(), LocalDateTime.now());
 
-		Consumer<Stream<Path>> pathHandler = part1SourceHandlerFactory.getSourceHandler(source);
+		Consumer<Stream<Path>> pathHandler = step1SourceHandlingStrategy.getSourceHandler(source);
 
 		Set<String> words = Collections.emptySet();
 
