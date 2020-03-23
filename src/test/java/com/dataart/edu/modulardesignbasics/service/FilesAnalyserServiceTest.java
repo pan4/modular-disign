@@ -2,7 +2,7 @@ package com.dataart.edu.modulardesignbasics.service;
 
 import com.dataart.edu.modulardesignbasics.model.Source;
 import com.dataart.edu.modulardesignbasics.repository.SourceRepository;
-import com.dataart.edu.modulardesignbasics.handler.PathHandlerFactory;
+import com.dataart.edu.modulardesignbasics.service.strategy.SourceHandlingStrategy;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -19,13 +19,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-class WordsScannerServiceTest {
+class FilesAnalyserServiceTest {
 
 	@InjectMocks
-	WordsScannerService wordsScannerService;
+	FilesAnalyserService filesAnalyserService;
 
 	@Mock
-	PathHandlerFactory pathHandlerFactory;
+	SourceHandlingStrategy sourceHandlingStrategy;
 
 	@Mock
 	SourceRepository sourceRepository;
@@ -50,19 +50,19 @@ class WordsScannerServiceTest {
 
 		when(sourceRepository.findAll()).thenReturn(Arrays.asList(source1, source2));
 
-		wordsScannerService.scan();
+		filesAnalyserService.scan();
 
 		ArgumentCaptor<Path> pathCaptor = ArgumentCaptor.forClass(Path.class);
 		verify(fileSystemScanner, times(2)).scan(pathCaptor.capture(), any());
 		assertEquals(sourcePath1, pathCaptor.getAllValues().get(0).toString());
 		assertEquals(sourcePath2, pathCaptor.getAllValues().get(1).toString());
 
-		ArgumentCaptor<Long> sourceIdCaptor = ArgumentCaptor.forClass(Long.class);
-		verify(pathHandlerFactory, times(2)).getPathHandler(sourceIdCaptor.capture());
-		assertEquals(sourceId1, sourceIdCaptor.getAllValues().get(0));
-		assertEquals(sourceId2, sourceIdCaptor.getAllValues().get(1));
-
 		ArgumentCaptor<Source> sourceCaptor = ArgumentCaptor.forClass(Source.class);
+		verify(sourceHandlingStrategy, times(2)).getSourceHandler(sourceCaptor.capture());
+		assertEquals(source1, sourceCaptor.getAllValues().get(0));
+		assertEquals(source2, sourceCaptor.getAllValues().get(1));
+
+		sourceCaptor = ArgumentCaptor.forClass(Source.class);
 		verify(sourceRepository, times(2)).update(sourceCaptor.capture());
 		assertEquals(source1, sourceCaptor.getAllValues().get(0));
 		assertEquals(source2, sourceCaptor.getAllValues().get(1));

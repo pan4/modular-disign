@@ -1,5 +1,6 @@
 package com.dataart.edu.modulardesignbasics.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -11,11 +12,12 @@ import java.util.stream.Stream;
 @Component
 public class FileSystemScanner {
 
-    private String filesToScanPattern = ".*\\.txt$";
+    @Value("${pattern:.*\\.txt$}")
+    private String filesToScanPattern;
 
-    public void scan(Path path, Consumer<Path> consumer) throws IOException {
+    public void scan(Path path, Consumer<Stream<Path>> consumer) throws IOException {
         try (Stream<Path> filesStream = getDescendantFilesStream(path)) {
-            filesStream.forEach(consumer);
+            consumer.accept(filesStream);
         }
     }
 

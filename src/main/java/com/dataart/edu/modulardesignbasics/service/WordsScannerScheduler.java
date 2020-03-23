@@ -12,10 +12,10 @@ public class WordsScannerScheduler {
     // Every 60 seconds
     private static final String CRON = "*/60 * * * * *";
 
-    private final WordsScannerService wordsScannerService;
+    private final FilesAnalyserService filesAnalyserService;
 
     @Scheduled(cron = CRON)
     private void schedule() throws IOException {
-        wordsScannerService.scan();
+        filesAnalyserService.scan();
     }
 }
