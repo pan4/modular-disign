@@ -14,7 +14,8 @@ public class FileSystemScanner {
 
     public void scan(Path path, List<Consumer<Path>> consumers) throws IOException {
         try (Stream<Path> pathStream = Files.walk(path)) {
-            pathStream.forEach(p -> consumers.forEach(c -> c.accept(p)));
+            pathStream.parallel()
+                    .forEach(p -> consumers.forEach(c -> c.accept(p)));
         }
     }
 }

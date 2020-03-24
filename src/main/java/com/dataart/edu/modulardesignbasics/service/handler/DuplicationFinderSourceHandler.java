@@ -8,10 +8,10 @@ import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class DuplicationFinderSourceHandler extends BaseSourceHandler {
@@ -25,7 +25,7 @@ public class DuplicationFinderSourceHandler extends BaseSourceHandler {
 
     @Override
     public void init() {
-        duplicatedFiles = new HashMap<>();
+        duplicatedFiles = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -34,13 +34,12 @@ public class DuplicationFinderSourceHandler extends BaseSourceHandler {
             try {
                 HashCode hash = com.google.common.io.Files
                         .asByteSource(path.toFile()).hash(Hashing.sha256());
-                if (duplicatedFiles.get(hash) == null) {
-                    Set<String> set = new HashSet<>();
-                    set.add(path.toString());
-                    duplicatedFiles.put(hash, set);
-                } else {
-                    duplicatedFiles.get(hash).add(path.toString());
-                }
+                Set<String> set = new HashSet<>();
+                set.add(path.toString());
+                duplicatedFiles.merge(hash, set, (oldSet, newSet) -> {
+                    oldSet.addAll(newSet);
+                    return oldSet;
+                });
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

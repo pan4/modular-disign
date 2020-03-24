@@ -5,8 +5,9 @@ import com.dataart.edu.modulardesignbasics.repository.WordsPerSourceFileReposito
 import com.dataart.edu.modulardesignbasics.service.WordsCollector;
 
 import java.nio.file.Path;
-import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class WordsPerSourceCollectorSourceHandler extends BaseSourceHandler {
@@ -15,7 +16,8 @@ public class WordsPerSourceCollectorSourceHandler extends BaseSourceHandler {
 
     private final WordsPerSourceFileRepository fileRepository;
 
-    private Set<String> words;
+    private Map<Object, Set<String>> words;
+    private static Object key = new Object();
 
     public WordsPerSourceCollectorSourceHandler(WordsCollector wordsCollector, WordsPerSourceFileRepository fileRepository) {
         this.wordsCollector = wordsCollector;
@@ -25,19 +27,23 @@ public class WordsPerSourceCollectorSourceHandler extends BaseSourceHandler {
     @Override
     public void init() {
         fileRepository.createFile();
-        words = new HashSet<>();
+        words = new ConcurrentHashMap<>();
     }
 
     @Override
     protected Consumer<Path> getSourceHandlerInternal(Source source) {
         return path -> {
-            words.addAll(wordsCollector.collectWords(path));
+            final Set<String> words = (Set)wordsCollector.collectWords(path);
+            this.words.merge(key, words, (oldSet, newSet) -> {
+                oldSet.addAll(newSet);
+                return oldSet;
+            });
         };
     }
 
     @Override
     public void sourceScanned(Source source) {
-        fileRepository.saveWords(source.getPath(), words);
+        fileRepository.saveWords(source.getPath(), words.get(key));
         words.clear();
     }
 }
