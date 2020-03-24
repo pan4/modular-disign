@@ -1,6 +1,7 @@
 package com.dataart.edu.modulardesignbasics.repository;
 
 import com.dataart.edu.modulardesignbasics.model.Source;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -13,11 +14,11 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+@AllArgsConstructor
 @Repository
 public class SourceRepository {
 
-    @Autowired
-    JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
     public List<Source> findAll() {
         return jdbcTemplate.query(

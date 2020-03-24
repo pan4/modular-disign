@@ -1,6 +1,7 @@
 package com.dataart.edu.modulardesignbasics.repository;
 
 import com.dataart.edu.modulardesignbasics.model.Result;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -12,10 +13,11 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Iterator;
 
+@AllArgsConstructor
 @Repository
 public class ResultRepository {
-    @Autowired
-    JdbcTemplate jdbcTemplate;
+
+    private final JdbcTemplate jdbcTemplate;
 
     public void deleteAll() {
         jdbcTemplate.update("delete from result");

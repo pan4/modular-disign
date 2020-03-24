@@ -7,5 +7,3 @@ result:
     name: txt_results.txt
   doc:
     name: doc_results.txt
-
-pattern: .*(\.txt|\.doc)$
