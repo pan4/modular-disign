@@ -10,7 +10,7 @@ import java.io.IOException;
 @AllArgsConstructor
 public class WordsScannerScheduler {
     // Every 60 seconds
-    private static final String CRON = "*/60 * * * * *";
+    private static final String CRON = "*/15 * * * * *";
 
     private final FilesAnalyserService filesAnalyserService;
 

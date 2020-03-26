@@ -3,3 +3,13 @@ spring:
     url: jdbc:postgresql://127.0.0.1:5432/words_scanner
     username: words_scanner
     password: password
+
+words:
+  length:
+    min: 3
+
+result:
+  txt:
+    name: txt_results.txt
+  doc:
+    name: doc_results.txt

@@ -2,18 +2,22 @@ package com.dataart.edu.modulardesignbasics.service;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Scanner;
+import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-public class WordsCollector {
+public class WordsCollector implements Consumer<Path> {
+    private Consumer<Map.Entry<String, Set<String>>> consumer;
 
-    public Collection<String> collectWords(Path path) {
-        return collectWords(path, Collectors.toSet());
+    @Override
+    public void accept(Path path) {
+        if(path.toString().endsWith(".txt")) {
+            Set<String> words = (Set<String>) collectWords(path, Collectors.toSet());
+            consumer.accept(new java.util.AbstractMap.SimpleEntry<>(path.toString(), words));
+        }
     }
 
     public Collection<String> collectWords(Path path, Collector<String, ?, ? extends Collection<String>> collector) {
@@ -33,5 +37,9 @@ public class WordsCollector {
 
     protected Predicate<String> getFilter() {
         return s -> s.matches("[а-яА-Яa-zA-Z]+");
+    }
+
+    public void setConsumer(Consumer<Map.Entry<String, Set<String>>> consumer) {
+        this.consumer = consumer;
     }
 }
