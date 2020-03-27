@@ -1,31 +1,32 @@
 package com.dataart.edu.modulardesignbasics.service;
 
+import lombok.AllArgsConstructor;
+
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.Collections;
+import java.util.Scanner;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-public class WordsCollector implements Consumer<Path> {
-    private Consumer<Map.Entry<String, Set<String>>> consumer;
+@AllArgsConstructor
+public class WordsCollector implements Function<Path, Set<String>> {
+
+    private final Predicate<Path> pathFilter;
 
     @Override
-    public void accept(Path path) {
-        if(path.toString().endsWith(".txt")) {
-            Set<String> words = (Set<String>) collectWords(path, Collectors.toSet());
-            consumer.accept(new java.util.AbstractMap.SimpleEntry<>(path.toString(), words));
+    public Set<String> apply(Path path) {
+        if (!pathFilter.test(path)) {
+            return Collections.emptySet();
         }
-    }
 
-    public Collection<String> collectWords(Path path, Collector<String, ?, ? extends Collection<String>> collector) {
         try (Scanner in = new Scanner(path)) {
             return in.tokens()
                     .map(getMapper())
                     .filter(getFilter())
-                    .collect(collector);
+                    .collect(Collectors.toSet());
         } catch (IOException ex) {
             return Collections.emptySet();
         }
@@ -37,9 +38,5 @@ public class WordsCollector implements Consumer<Path> {
 
     protected Predicate<String> getFilter() {
         return s -> s.matches("[а-яА-Яa-zA-Z]+");
-    }
-
-    public void setConsumer(Consumer<Map.Entry<String, Set<String>>> consumer) {
-        this.consumer = consumer;
     }
 }

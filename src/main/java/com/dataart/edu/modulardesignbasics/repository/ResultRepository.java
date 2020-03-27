@@ -43,7 +43,7 @@ public class ResultRepository {
                 });
     }
 
-    public void deleteBySourceIdAndFileName(Long sourceId, String fileName){
+    public void deleteBySourceIdAndFileName(Long sourceId, String fileName) {
         jdbcTemplate.update("delete from result where dir_id = ? and file_name = ?", sourceId, fileName);
     }
 

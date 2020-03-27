@@ -10,16 +10,19 @@ import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 @Repository
-public class DuplicatedFilesFileRepository {
+public class DuplicateRepository implements Consumer<Map<HashCode, Set<String>>> {
+
     @Value("${result.doc.name: DuplicatedFiles.txt}")
     private String fileName;
 
-    public void saveDuplicatedFiles(Map<HashCode, Set<String>> duplicatedFiles){
+    @Override
+    public void accept(Map<HashCode, Set<String>> duplicates) {
         try {
             PrintWriter printWriter = new PrintWriter(new FileWriter(fileName));
-            for (Set<String> set : duplicatedFiles.values()) {
+            for (Set<String> set : duplicates.values()) {
                 if (set.size() > 1) {
                     printWriter.println(set.toString());
                 }

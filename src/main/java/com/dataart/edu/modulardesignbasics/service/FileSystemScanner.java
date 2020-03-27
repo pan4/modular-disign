@@ -1,21 +1,20 @@
 package com.dataart.edu.modulardesignbasics.service;
 
-import org.springframework.stereotype.Component;
+import lombok.AllArgsConstructor;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-@Component
+@AllArgsConstructor
 public class FileSystemScanner {
+    private final Predicate<Path> pathFilter;
 
-    public void scan(Path path, List<Consumer<Path>> consumers) throws IOException {
-        try (Stream<Path> pathStream = Files.walk(path)) {
-            pathStream.parallel()
-                    .forEach(p -> consumers.forEach(c -> c.accept(p)));
-        }
+    public Stream<Path> scan(Path path) throws IOException {
+        return Files.walk(path)
+                .parallel()
+                .filter(pathFilter);
     }
 }

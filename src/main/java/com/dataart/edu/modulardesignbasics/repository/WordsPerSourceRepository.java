@@ -11,11 +11,11 @@ import java.io.UncheckedIOException;
 import java.util.Set;
 
 @Repository
-public class WordsPerSourceFileRepository {
+public class WordsPerSourceRepository {
     @Value("${result.txt.name: WordsPerSource.txt}")
     private String fileName;
 
-    public void createFile(){
+    public void createFile() {
         try {
             FileWriter fileWriter = new FileWriter(fileName);
             fileWriter.close();
